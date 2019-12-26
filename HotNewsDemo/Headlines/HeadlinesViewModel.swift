@@ -87,7 +87,11 @@ class HeadlinesViewModel: HeadlinesViewModelType {
     /// Update local model array
     /// - Parameter models: ArticleModel array
     private func updateArticleModels( models:[ArticleModel] ) {
-        self._articleModels = models
+        // 新的在前
+        var array = models.sorted { (m1, m2) -> Bool in
+            return m1.publishedAt > m2.publishedAt
+        }
+        self._articleModels = array
         let cellVMs = self.mapArticleListViewModel(models: self._articleModels)
         self._articleVMs.accept(cellVMs)     
     }
