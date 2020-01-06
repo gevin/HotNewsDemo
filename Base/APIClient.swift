@@ -85,16 +85,19 @@ class APIClient: NSObject {
     var providerHolder:[MoyaProvider<NewsAPI>] = []
     var provider = MoyaProvider<NewsAPI>()
     private var _token = "aadfc8775efa4815b8480bb830f583c9"
+    var queue = DispatchQueue(label: "com.gevin.newsApi")
     
     override init() {
         super.init()
         let authPlugin = AccessTokenPlugin(tokenClosure: self._token)
-        self.provider = MoyaProvider<NewsAPI>(plugins: [authPlugin])        
+        self.provider = MoyaProvider<NewsAPI>(plugins: [authPlugin])
+        self.provider.manager.session.configuration.timeoutIntervalForRequest = 20
     }
     
     func fetchHeadlines() -> Observable<Response> {
-        let apiRequest = provider.rx.request(.topHeadlines(country: "us"), callbackQueue: DispatchQueue.main)
+        let apiRequest = provider.rx.request(.topHeadlines(country: "us"), callbackQueue: queue)
             .asObservable()
+            
         return apiRequest
     }  
 
