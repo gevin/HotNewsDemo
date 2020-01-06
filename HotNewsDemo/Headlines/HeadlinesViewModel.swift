@@ -8,6 +8,7 @@
 
 import RxSwift
 import RxCocoa
+import RxRealm
 import RealmSwift
 import Realm
 import SDWebImage
@@ -33,10 +34,9 @@ class HeadlinesViewModel: HeadlinesViewModelType {
     private var _articleVMs     = BehaviorRelay<[ArticleListViewModel]>(value: [])
     private var _articleModels  = [ArticleModel]()
     var disposeBag              = DisposeBag()
-    var notifyToken: NotificationToken? = nil
     
     deinit {
-        notifyToken?.invalidate()
+        
     }
     
     init( coordinator: HeadlinesCoordinator, newsInteractor: NewsInteractorType, imageInteractor: ImageInteractor) {
@@ -47,58 +47,48 @@ class HeadlinesViewModel: HeadlinesViewModelType {
     
     /// ViewModel initial
     func initial() {
-        notifyToken = self.newsInteractor.observeArticles {[weak self] (changes:RealmCollectionChange<Results<ArticleModel>>) in
-            guard let strongSelf = self else {return}
-            switch changes {
-            case .initial(let collection):
-                print("initial")
-                if collection.count == 0 {
-                    strongSelf.refresh()
-                } else {
-                    strongSelf.updateArticleModels(models: collection.toArray())
-                }
-                break
-            case .update(let collection, let deletions, let insertions, let modifications):
-                print("update")
-                strongSelf.updateArticleModels(models: collection.toArray())
-                break
-            case .error(let err):
-                strongSelf._errorTrack.raiseError(err)
-                break
-            }
-        }
-    }
-    
-    
-    /// reload local ArticleModel Data.
-    /// It would be clear all ArticleModel data in Realm and refetch data from server.
-    func refresh() {
-        // fetch news headlines
-        self.newsInteractor.reloadNewsHeadlines()
-            .trackActivity(self._loadingTrack)
-            .trackError(self._errorTrack)
-            .subscribe(onNext: {[weak self] (results:[ArticleModel]) in
+        // observe changes of Article 
+        self.newsInteractor.observeArticles()
+            .subscribe(onNext: {[weak self] (results:AnyRealmCollection<ArticleModel>, changesOrNil:RealmChangeset?) in
                 guard let strongSelf = self else {return}
+                if let changes = changesOrNil {
+//                    print("result: \(results)")
+//                    print("deleted: \(changes.deleted)")
+//                    print("inserted: \(changes.inserted)")
+//                    print("updated: \(changes.updated)")
+                    strongSelf.updateModels( results.toArray() )
+                } else {
+                        strongSelf.updateModels( results.toArray() )
+                }
             })
             .disposed(by: disposeBag)
     }
     
-    
-    /// Update local model array
-    /// - Parameter models: ArticleModel array
-    private func updateArticleModels( models:[ArticleModel] ) {
+    private func updateModels(_ models:[ArticleModel] ) {
         // 新的在前
         var array = models.sorted { (m1, m2) -> Bool in
             return m1.publishedAt > m2.publishedAt
         }
         self._articleModels = array
-        let cellVMs = self.mapArticleListViewModel(models: self._articleModels)
+        let cellVMs = self.mapCellViewModel( self._articleModels)
+        self._articleVMs.accept(cellVMs)             
+    }
+    
+    /// Update local model array
+    /// - Parameter models: ArticleModel array
+    private func addModels(_ models:[ArticleModel] ) {
+        // 新的在前
+        var array = models.sorted { (m1, m2) -> Bool in
+            return m1.publishedAt > m2.publishedAt
+        }
+        self._articleModels = array
+        let cellVMs = self.mapCellViewModel( self._articleModels)
         self._articleVMs.accept(cellVMs)     
     }
     
     /// Model -> ViewModel
     /// - Parameter models: ArticleModel array
-    private func mapArticleListViewModel( models:[ArticleModel] ) -> [ArticleListViewModel] {
+    private func mapCellViewModel(_ models:[ArticleModel] ) -> [ArticleListViewModel] {
         let cellVMs = models.map { (model:ArticleModel) -> ArticleListViewModel in
             var cellVM = ArticleListViewModel()
             cellVM.identity = model.newsId
@@ -125,6 +115,17 @@ extension HeadlinesViewModel {
         self.coordinator.gotoNewsDetail(newsId: articleVM.identity)
     }
     
+    /// It would be clear all ArticleModel data in Realm and refetch data from server.
+    func refresh() {
+        // fetch news headlines
+        self.newsInteractor.reloadNewsHeadlines()
+            .trackActivity(self._loadingTrack)
+            .trackError(self._errorTrack)
+            .subscribe(onNext: {[weak self] (results:[ArticleModel]) in
+                guard let strongSelf = self else {return}
+            })
+            .disposed(by: disposeBag)
+    }
 }
 
 // MARK: - output

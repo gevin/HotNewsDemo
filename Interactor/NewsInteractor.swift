@@ -12,14 +12,14 @@ import Moya
 import Alamofire
 import Realm
 import RealmSwift
-
+import RxRealm
 
 protocol NewsInteractorType : InteractorType {
     func getArticleModel( newsId: String ) -> ArticleModel?
     func updateArticleContent( model: ArticleModel, newContent: String  )
     func fetchNewsHeadlines() -> Observable<[ArticleModel]>
     func reloadNewsHeadlines() -> Observable<[ArticleModel]>
-    func observeArticles(_ callback: @escaping (RealmCollectionChange<Results<ArticleModel>>) -> Void ) -> NotificationToken?
+    func observeArticles() -> Observable<(AnyRealmCollection<ArticleModel>, RealmChangeset?)>
 }
 
 class NewsInteractor: NewsInteractorType {
@@ -84,10 +84,8 @@ class NewsInteractor: NewsInteractorType {
             })
     }
     
-    func observeArticles(_ callback: @escaping (RealmCollectionChange<Results<ArticleModel>>) -> Void ) -> NotificationToken? {
+    func observeArticles() -> Observable<(AnyRealmCollection<ArticleModel>, RealmChangeset?)> {
         let result = self.realm.objects(ArticleModel.self)
-        let token = result.observe(callback)
-        
-        return token
+        return Observable.changeset(from: result)
     }
 }
