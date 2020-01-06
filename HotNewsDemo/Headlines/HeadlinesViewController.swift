@@ -11,12 +11,12 @@ import RxSwift
 import RxCocoa
 import RxDataSources
 import SVProgressHUD
-import SDWebImage
-import Moya
-import Alamofire
-import Realm
-import RealmSwift
 
+extension UIScrollView {
+    func  isNearBottomEdge(edgeOffset: CGFloat = 20.0) -> Bool {
+        return self.contentOffset.y + self.frame.size.height + edgeOffset > self.contentSize.height
+    }
+}
 
 struct HeadlinesSectionModel {
     var header: String
@@ -40,11 +40,20 @@ extension HeadlinesSectionModel: AnimatableSectionModelType {
 class HeadlinesViewController: UIViewController, ViewType {
     
     var viewModel: HeadlinesViewModelType?
+    
     var disposeBag = DisposeBag()
+    
     var sectionRelay = BehaviorRelay<[HeadlinesSectionModel]>( value: [HeadlinesSectionModel(header: "", items: [])] )
 
+    var isLoadMore: Bool = false
+    
     @IBOutlet weak var tableView: UITableView!
+    
     var refreshControl: UIRefreshControl = UIRefreshControl(frame: CGRect.zero)
+    
+    var original_offset: CGPoint = CGPoint.zero
+    
+    var noDataView = NoDataView.create()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -89,6 +98,10 @@ class HeadlinesViewController: UIViewController, ViewType {
                 SVProgressHUD.showError(withStatus: error.localizedDescription)
             })
             .disposed(by: disposeBag)
+        
+        
+        
+        
     }
     
     // 設定 tableView
@@ -121,7 +134,7 @@ class HeadlinesViewController: UIViewController, ViewType {
         self.tableView.register(UINib(nibName: "ArticleListCell", bundle: nil), forCellReuseIdentifier: "ArticleListCell")
         
         // config cell
-        let dataSource = RxTableViewSectionedAnimatedDataSource<HeadlinesSectionModel>(configureCell: { (_, tableView, indexPath, model: ArticleListViewModel ) -> UITableViewCell in
+        let dataSource = MyTableAnimationDataSource<HeadlinesSectionModel>(configureCell: { (_, tableView, indexPath, model: ArticleListViewModel ) -> UITableViewCell in
             let cell = ArticleListCell.cellWith(tableView: tableView, indexPath: indexPath)
             model.content
                 .bind(to: cell.contentLabel.rx.text )
@@ -131,7 +144,52 @@ class HeadlinesViewController: UIViewController, ViewType {
                 .disposed(by: cell.disposeBag)
             return cell
         })
+        
+        // bind data
         self.sectionRelay.bind(to: self.tableView.rx.items(dataSource: dataSource) ).disposed(by: disposeBag)
+        
+//        // observe reload data
+//        dataSource.dataReloded.asObservable()
+//            .subscribe(onNext: {[weak self] (event:Event<[MovieListSectionModel]>) in
+//                guard let strongSelf = self else {return}
+//                // pull down to refresh
+//                if !strongSelf.isLoadMore {
+//                    strongSelf.collectionView.contentOffset = CGPoint.zero
+//                }
+//            })
+//            .disposed(by: self.disposeBag)
+        
+        // load more
+        tableView.rx.contentOffset
+            .filter({_ in 
+                // scroll to bottom and not loading 
+                return self.tableView.isNearBottomEdge(edgeOffset: 20.0) && !self.isLoadMore 
+            })
+            .withLatestFrom(self.rx.viewDidAppear)
+            .filter({$0}) // if viewDidAppear, then run downstream
+            //.flatMap { state in state ? Signal.just(()) : Signal.empty() }
+            .do(onNext: {[weak self] (offset) in
+                guard let strongSelf = self else {return}
+                
+                // save original offset
+//                strongSelf.original_offset = strongSelf.tableView.contentOffset
+                
+                // trigger load next page
+                strongSelf.viewModel?.loadNextPage()
+                strongSelf.isLoadMore = true
+            })
+            .flatMap({ (_) -> Observable<Event<[HeadlinesSectionModel]>> in
+                return dataSource.dataReloded.asObservable() // observe collectionView reloadData completed event
+            })
+            .filter({_ in self.isLoadMore})
+            .subscribe(onNext: {[weak self] (_) in
+                guard let strongSelf = self else {return}
+                // when reload completed, adjust content offset to previous position and set isLoadMore = false 
+                //print("offset:\(strongSelf.collectionView.contentOffset)")
+//                strongSelf.tableView.setContentOffset(strongSelf.original_offset, animated: false)
+                strongSelf.isLoadMore = false
+            })
+            .disposed(by: self.disposeBag)
     }
     
 }

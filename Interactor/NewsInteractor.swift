@@ -16,8 +16,9 @@ import RxRealm
 
 protocol NewsInteractorType : InteractorType {
     func getArticleModel( newsId: String ) -> ArticleModel?
-    func updateArticleContent( model: ArticleModel, newContent: String  )
-    func fetchNewsHeadlines() -> Observable<[ArticleModel]>
+    func updateArticleContent( model: ArticleModel, newContent: String )
+    func getCurrentPage() -> Int
+    func fetchNextNewsHeadlines() -> Observable<[ArticleModel]>
     func reloadNewsHeadlines() -> Observable<[ArticleModel]>
     func observeArticles() -> Observable<(AnyRealmCollection<ArticleModel>, RealmChangeset?)>
 }
@@ -33,6 +34,24 @@ class NewsInteractor: NewsInteractorType {
         self.realm = realm
     }
     
+    private func getConfig() -> NewsInteractorConfig {
+        let result = self.realm.objects(NewsInteractorConfig.self)
+        if result.count == 0 {
+            let model = NewsInteractorConfig()
+            model.currentPage = 0
+            try! self.realm.write {
+                self.realm.add(model)
+            }
+            return model
+        }
+        return result[0]
+    }
+    
+    func getCurrentPage() -> Int {
+        let config = self.getConfig()
+        return config.currentPage
+    }
+    
     func getArticleModel( newsId: String ) -> ArticleModel? {
         let model = self.realm.object(ofType: ArticleModel.self, forPrimaryKey: newsId)
         
@@ -45,41 +64,53 @@ class NewsInteractor: NewsInteractorType {
         }
     }
     
-    func fetchNewsHeadlines() -> Observable<[ArticleModel] > {
-        let result = self.realm.objects(ArticleModel.self)
-        if result.count > 0 {
-            return Observable.of(result.toArray())
-        }
+    func fetchNextNewsHeadlines() -> Observable<[ArticleModel] > {
         
-        return self.apiClient.fetchHeadlines()
+        let config = self.getConfig()
+        return self.apiClient.fetchHeadlines(page: config.currentPage + 1)
             .debug()
             .map([ArticleModel].self, atKeyPath: "articles")
             .do(onNext: {[weak self] (models:[ArticleModel]) in
                 guard let strongSelf = self else { return }
-                do {
-                    try strongSelf.realm.write {
-                        strongSelf.realm.add(models)
+                
+                DispatchQueue.main.async {
+                    do {
+                        if models.count > 0 {
+                            try strongSelf.realm.write {
+                                config.currentPage += 1
+                                strongSelf.realm.add(models)
+                            }
+                        } else {
+                            print("no more data.")
+                        }
+                    } catch {
+                        print(error)
                     }
-                } catch {
-                    print(error)
                 }
             })
     }
     
     func reloadNewsHeadlines() -> Observable<[ArticleModel] > {
-        return self.apiClient.fetchHeadlines()
+        let config = self.getConfig()
+        try! self.realm.write {
+            config.currentPage = 1
+        }
+        
+        return self.apiClient.fetchHeadlines(page: config.currentPage)
             .debug()
             .map([ArticleModel].self, atKeyPath: "articles")
             .do(onNext: {[weak self] (models:[ArticleModel]) in
                 guard let strongSelf = self else { return }
-                do {
-                    let result = strongSelf.realm.objects(ArticleModel.self)
-                    try strongSelf.realm.write {
-                        strongSelf.realm.delete(result)
-                        strongSelf.realm.add(models)
+                DispatchQueue.main.async {
+                    do {
+                        let result = strongSelf.realm.objects(ArticleModel.self)
+                        try strongSelf.realm.write {
+                            strongSelf.realm.delete(result)
+                            strongSelf.realm.add(models)
+                        }
+                    } catch {
+                        print(error)
                     }
-                } catch {
-                    print(error)
                 }
             })
     }

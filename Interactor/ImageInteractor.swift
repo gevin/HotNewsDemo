@@ -20,7 +20,13 @@ enum ImageState {
     case error(_ error: Error? )
 }
 
-class ImageInteractor: InteractorType {
+protocol ImageInteractorType: InteractorType {
+    
+    func getImage( urlString: String ) -> Observable<ImageState>
+    
+}
+
+class ImageInteractor: ImageInteractorType {
     
     var apiClient: APIClient
     

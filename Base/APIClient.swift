@@ -13,7 +13,7 @@ import Moya
 import Alamofire
 
 enum NewsAPI {
-    case topHeadlines( country: String ) // get https://newsapi.org/v2/top-headlines?country=us&apiKey=aadfc8775efa4815b8480bb830f583c9
+    case topHeadlines( page: Int, country: String ) // get https://newsapi.org/v2/top-headlines?country=us&apiKey=aadfc8775efa4815b8480bb830f583c9
     case everything(q: String )  // get https://newsapi.org/v2/everything?q=bitcoin&apiKey=aadfc8775efa4815b8480bb830f583c9
     case sources     // get https://newsapi.org/v2/sources?apiKey=aadfc8775efa4815b8480bb830f583c9
 }
@@ -57,8 +57,9 @@ extension NewsAPI: Moya.TargetType, AccessTokenAuthorizable {
     var task: Task {
         var params:[String : Any] = [:]
         switch self {
-        case .topHeadlines(let country):
+        case .topHeadlines(let page, let country):
             params["country"] = country
+            params["page"] = page
             return .requestParameters(parameters: params, encoding: URLEncoding.default)
         case .everything(let q):
             params["q"] = q
@@ -94,11 +95,11 @@ class APIClient: NSObject {
         self.provider.manager.session.configuration.timeoutIntervalForRequest = 20
     }
     
-    func fetchHeadlines() -> Observable<Response> {
-        let apiRequest = provider.rx.request(.topHeadlines(country: "us"), callbackQueue: queue)
+func fetchHeadlines(page: Int) -> Observable<Response> {
+        let apiRequest = provider.rx.request(.topHeadlines(page: page, country: "us"), callbackQueue: queue)
             .asObservable()
             
         return apiRequest
-    }  
+    }
 
 }

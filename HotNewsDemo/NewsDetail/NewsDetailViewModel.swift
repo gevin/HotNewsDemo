@@ -30,7 +30,7 @@ class NewsDetailViewModel: NewsDetailViewModelType {
 
     var coordinator: NewsDetailCoordinator
     var newsInteractor: NewsInteractorType
-    let imageInteractor: ImageInteractor
+    let imageInteractor: ImageInteractorType
     
     private var _newsImage   = BehaviorRelay<ImageState>(value: .none)
     private var _newsTitle   = BehaviorRelay<String>(value: "")
@@ -47,7 +47,7 @@ class NewsDetailViewModel: NewsDetailViewModelType {
         print("NewsDetailViewModel dealloc")
     }
 
-    init(coordinator: NewsDetailCoordinator, newsInteractor: NewsInteractorType, imageInteractor: ImageInteractor, newsId: String ) {
+    init(coordinator: NewsDetailCoordinator, newsInteractor: NewsInteractorType, imageInteractor: ImageInteractorType, newsId: String ) {
         self.coordinator = coordinator
         self.newsInteractor = newsInteractor
         self.imageInteractor = imageInteractor

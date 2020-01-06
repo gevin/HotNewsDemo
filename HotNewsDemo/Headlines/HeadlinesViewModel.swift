@@ -17,6 +17,8 @@ protocol HeadlinesViewModelType: ViewModelType {
     
     // input 
     func selectArticle( articleVM: ArticleListViewModel )
+    func loadNextPage()
+    func refresh()
     
     // output
     var articleList: Driver<[ArticleListViewModel]> {get}
@@ -28,7 +30,7 @@ class HeadlinesViewModel: HeadlinesViewModelType {
 
     let coordinator: HeadlinesCoordinator
     let newsInteractor: NewsInteractorType
-    let imageInteractor: ImageInteractor
+    let imageInteractor: ImageInteractorType
     private var _loadingTrack   = ActivityIndicator()
     private var _errorTrack     = ErrorTracker()
     private var _articleVMs     = BehaviorRelay<[ArticleListViewModel]>(value: [])
@@ -39,7 +41,7 @@ class HeadlinesViewModel: HeadlinesViewModelType {
         
     }
     
-    init( coordinator: HeadlinesCoordinator, newsInteractor: NewsInteractorType, imageInteractor: ImageInteractor) {
+    init( coordinator: HeadlinesCoordinator, newsInteractor: NewsInteractorType, imageInteractor: ImageInteractorType) {
         self.coordinator   = coordinator
         self.newsInteractor = newsInteractor
         self.imageInteractor = imageInteractor
@@ -58,7 +60,12 @@ class HeadlinesViewModel: HeadlinesViewModelType {
 //                    print("updated: \(changes.updated)")
                     strongSelf.updateModels( results.toArray() )
                 } else {
+                    // initial state
+                    if results.count == 0 {
+                        strongSelf.loadNextPage()
+                    } else {
                         strongSelf.updateModels( results.toArray() )
+                    }
                 }
             })
             .disposed(by: disposeBag)
@@ -113,6 +120,18 @@ extension HeadlinesViewModel {
     func selectArticle(articleVM: ArticleListViewModel) {
         // move to detail
         self.coordinator.gotoNewsDetail(newsId: articleVM.identity)
+    }
+    
+    // fetch next page news
+    func loadNextPage() {
+        // fetch news headlines
+        self.newsInteractor.fetchNextNewsHeadlines()
+            .trackActivity(self._loadingTrack)
+            .trackError(self._errorTrack)
+            .subscribe(onNext: {[weak self] (results:[ArticleModel]) in
+                guard let strongSelf = self else {return}
+            })
+            .disposed(by: disposeBag)
     }
     
     /// It would be clear all ArticleModel data in Realm and refetch data from server.
