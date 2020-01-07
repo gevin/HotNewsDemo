@@ -72,6 +72,7 @@ class NewsInteractor: NewsInteractorType {
     func fetchNextNewsHeadlines() -> Observable<[ArticleModel] > {
         let config = self.getConfig()
         return self.apiClient.fetchHeadlines(page: config.currentPage + 1)
+            .retryPowInterval(maxRetry: 3, multiple: 2.0) // 第一次隔 2秒，第二次隔 4 秒，第三次隔 8秒
             .debug()
             .map([ArticleModel].self, atKeyPath: "articles")
             .realmWrite({ (realm:Realm, models:[ArticleModel]) in
@@ -93,6 +94,7 @@ class NewsInteractor: NewsInteractorType {
         }
                 
         return self.apiClient.fetchHeadlines(page: config.currentPage)
+            .retryPowInterval(maxRetry: 3, multiple: 2.0) // 第一次隔 2秒，第二次隔 4 秒，第三次隔 8秒
             .debug()
             .map([ArticleModel].self, atKeyPath: "articles")
             .realmWrite({ (realm:Realm, models:[ArticleModel]) in

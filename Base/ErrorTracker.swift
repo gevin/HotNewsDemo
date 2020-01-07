@@ -82,4 +82,14 @@ extension ObservableType {
             }
         }
     }
+    
+    func retryPowInterval( maxRetry: Int, multiple: Double ) -> Observable<E> {
+        return retryWhen { errors in
+            return errors.enumerated().flatMap { (arg) -> Observable<Int64> in
+                let (index, error) = arg
+                return index <= maxRetry ? Observable<Int64>.timer(RxTimeInterval( pow( multiple, Double(index)) ), scheduler: MainScheduler.instance) : Observable.error(error)
+            }
+        }
+    }
+    
 }
