@@ -20,14 +20,14 @@ class RootCoordinator: NSObject, CoordinatorType, UINavigationControllerDelegate
     private var _window: UIWindow
     
     let apiClient: APIClient
-    let realm: Realm 
+    let realmService: RealmService
     var disposeBag = DisposeBag()
     
-    required init(window: UIWindow, navigationController: UINavigationController?, apiClient: APIClient, realm: Realm ) {
+    required init(window: UIWindow, navigationController: UINavigationController?, apiClient: APIClient, realmService: RealmService ) {
         self._window = window
         self._navigationController = navigationController
         self.apiClient = apiClient
-        self.realm = realm
+        self.realmService = realmService
     }
     
     func start() {
@@ -41,7 +41,7 @@ class RootCoordinator: NSObject, CoordinatorType, UINavigationControllerDelegate
     }
     
     func gotoHeadlines() {
-        let coordinator = HeadlinesCoordinator(navigationController: self._navigationController, apiClient: apiClient, realm: realm)
+        let coordinator = HeadlinesCoordinator(navigationController: self._navigationController, apiClient: apiClient, realmService: realmService)
         coordinator.start()
     }
     

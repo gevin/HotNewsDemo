@@ -27,20 +27,23 @@ class NewsInteractor: NewsInteractorType {
     
     let apiClient: APIClient
     
-    let realm: Realm
+    let realmService: RealmService
     
-    init( apiClient: APIClient, realm: Realm) {
+    var disposeBag = DisposeBag()
+    
+    init( apiClient: APIClient, realmService: RealmService) {
         self.apiClient = apiClient
-        self.realm = realm
+        self.realmService = realmService
     }
     
     private func getConfig() -> NewsInteractorConfig {
-        let result = self.realm.objects(NewsInteractorConfig.self)
+        let realm = self.realmService.getRealm()
+        let result = realm.objects(NewsInteractorConfig.self)
         if result.count == 0 {
             let model = NewsInteractorConfig()
             model.currentPage = 0
-            try! self.realm.write {
-                self.realm.add(model)
+            try! realm.write {
+                realm.add(model)
             }
             return model
         }
@@ -53,70 +56,58 @@ class NewsInteractor: NewsInteractorType {
     }
     
     func getArticleModel( newsId: String ) -> ArticleModel? {
-        let model = self.realm.object(ofType: ArticleModel.self, forPrimaryKey: newsId)
+        let realm = self.realmService.getRealm()
+        let model = realm.object(ofType: ArticleModel.self, forPrimaryKey: newsId)
         
         return model
     }
     
     func updateArticleContent( model: ArticleModel, newContent: String  ) {
-        try! self.realm.write {
+        let realm = self.realmService.getRealm()
+        try! realm.write {
             model.content = newContent
         }
     }
     
     func fetchNextNewsHeadlines() -> Observable<[ArticleModel] > {
-        
         let config = self.getConfig()
         return self.apiClient.fetchHeadlines(page: config.currentPage + 1)
             .debug()
             .map([ArticleModel].self, atKeyPath: "articles")
-            .do(onNext: {[weak self] (models:[ArticleModel]) in
-                guard let strongSelf = self else { return }
-                
-                DispatchQueue.main.async {
-                    do {
-                        if models.count > 0 {
-                            try strongSelf.realm.write {
-                                config.currentPage += 1
-                                strongSelf.realm.add(models)
-                            }
-                        } else {
-                            print("no more data.")
-                        }
-                    } catch {
-                        print(error)
-                    }
+            .realmWrite({ (realm:Realm, models:[ArticleModel]) in
+                if models.count > 0 {
+                    realm.add(models)
+                } else {
+                    print("no more data")
                 }
             })
     }
     
     func reloadNewsHeadlines() -> Observable<[ArticleModel] > {
+        
+        let realm = self.realmService.getRealm()
         let config = self.getConfig()
-        try! self.realm.write {
+        
+        try! realm.write {
             config.currentPage = 1
         }
-        
+                
         return self.apiClient.fetchHeadlines(page: config.currentPage)
             .debug()
             .map([ArticleModel].self, atKeyPath: "articles")
-            .do(onNext: {[weak self] (models:[ArticleModel]) in
-                guard let strongSelf = self else { return }
-                DispatchQueue.main.async {
-                    do {
-                        let result = strongSelf.realm.objects(ArticleModel.self)
-                        try strongSelf.realm.write {
-                            strongSelf.realm.delete(result)
-                            strongSelf.realm.add(models)
-                        }
-                    } catch {
-                        print(error)
-                    }
+            .realmWrite({ (realm:Realm, models:[ArticleModel]) in
+                let result = realm.objects(ArticleModel.self)
+                realm.delete(result)
+                if models.count > 0 {
+                    realm.add(models)
+                } else {
+                    print("no more data")
                 }
             })
     }
     
     func observeArticles() -> Observable<(AnyRealmCollection<ArticleModel>, RealmChangeset?)> {
-        let result = self.realm.objects(ArticleModel.self)
+        let result = self.realmService.getRealm().objects(ArticleModel.self)
         return Observable.changeset(from: result)
     }
 }

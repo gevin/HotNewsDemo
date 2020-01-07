@@ -40,5 +40,5 @@ protocol ViewType {
 
 protocol InteractorType {
     var apiClient: APIClient { get }
-    var realm: Realm { get }
+    var realmService: RealmService { get }
 }

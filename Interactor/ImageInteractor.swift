@@ -30,13 +30,13 @@ class ImageInteractor: ImageInteractorType {
     
     var apiClient: APIClient
     
-    var realm: Realm
+    var realmService: RealmService
     
     var downloadTaskDict:[String:Observable<ImageState>] = [:]
     
-    init( apiClient: APIClient, realm: Realm) {
+    init( apiClient: APIClient, realmService: RealmService) {
         self.apiClient = apiClient
-        self.realm = realm
+        self.realmService = realmService
     }
     
     func getImage( urlString: String ) -> Observable<ImageState> {

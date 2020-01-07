@@ -24,15 +24,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         })
         
-        Realm.Configuration.defaultConfiguration = realmConfig
-        let realm = try! Realm(configuration: realmConfig)
-        print("realm db:\(realmConfig.fileURL?.absoluteString ?? "")")
+        RealmService.initial(config: realmConfig)
         
         window = UIWindow(frame: UIScreen.main.bounds)
         window?.backgroundColor = UIColor.white
         let navController = UINavigationController()
         let apiClient = APIClient()
-        let rootCoordinator = RootCoordinator( window: window!, navigationController: navController, apiClient: apiClient, realm: realm )
+        let rootCoordinator = RootCoordinator( window: window!, navigationController: navController, apiClient: apiClient, realmService: RealmService.shared )
         rootCoordinator.start()   
         
         return true
