@@ -13,7 +13,7 @@ import Moya
 import Alamofire
 
 enum NewsAPI {
-    case topHeadlines( page: Int, country: String ) // get https://newsapi.org/v2/top-headlines?country=us&apiKey=aadfc8775efa4815b8480bb830f583c9
+    case topHeadlines( page: Int, pageSize: Int, country: String ) // get https://newsapi.org/v2/top-headlines?country=us&apiKey=aadfc8775efa4815b8480bb830f583c9
     case everything(q: String )  // get https://newsapi.org/v2/everything?q=bitcoin&apiKey=aadfc8775efa4815b8480bb830f583c9
     case sources     // get https://newsapi.org/v2/sources?apiKey=aadfc8775efa4815b8480bb830f583c9
 }
@@ -57,9 +57,10 @@ extension NewsAPI: Moya.TargetType, AccessTokenAuthorizable {
     var task: Task {
         var params:[String : Any] = [:]
         switch self {
-        case .topHeadlines(let page, let country):
+        case .topHeadlines(let page, let pageSize, let country):
             params["country"] = country
             params["page"] = page
+            params["pageSize"] = pageSize
             return .requestParameters(parameters: params, encoding: URLEncoding.default)
         case .everything(let q):
             params["q"] = q
@@ -86,7 +87,7 @@ class APIClient: NSObject {
     var providerHolder:[MoyaProvider<NewsAPI>] = []
     var provider = MoyaProvider<NewsAPI>()
     private var _token = "aadfc8775efa4815b8480bb830f583c9"
-    var queue = DispatchQueue(label: "com.gevin.newsApi")
+    var queue = DispatchQueue.global(qos: .background)
     
     override init() {
         super.init()
@@ -96,7 +97,7 @@ class APIClient: NSObject {
     }
     
 func fetchHeadlines(page: Int) -> Observable<Response> {
-        let apiRequest = provider.rx.request(.topHeadlines(page: page, country: "us"), callbackQueue: queue)
+    let apiRequest = provider.rx.request(.topHeadlines(page: page, pageSize: 10, country: "us"), callbackQueue: queue)
             .asObservable()
             
         return apiRequest
