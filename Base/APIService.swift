@@ -1,6 +1,6 @@
 
 //
-//  APIClient.swift
+//  APIService.swift
 //  HotNewsDemo
 //
 //  Created by GevinChen on 2019/12/24.
@@ -82,7 +82,7 @@ extension NewsAPI: Moya.TargetType, AccessTokenAuthorizable {
     
 }
 
-class APIClient: NSObject {
+class APIService: NSObject {
     
     var providerHolder:[MoyaProvider<NewsAPI>] = []
     var provider = MoyaProvider<NewsAPI>()

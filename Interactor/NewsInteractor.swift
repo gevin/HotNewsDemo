@@ -25,17 +25,18 @@ protocol NewsInteractorType : InteractorType {
 
 class NewsInteractor: NewsInteractorType {
     
-    let apiClient: APIClient
+    let apiService: APIService
     
     let realmService: RealmService
     
     var disposeBag = DisposeBag()
     
-    init( apiClient: APIClient, realmService: RealmService) {
-        self.apiClient = apiClient
+    init( apiService: APIService, realmService: RealmService) {
+        self.apiService = apiService
         self.realmService = realmService
     }
     
+    ///
     private func getConfig() -> NewsInteractorConfig {
         let realm = self.realmService.getRealm()
         let result = realm.objects(NewsInteractorConfig.self)
@@ -50,11 +51,13 @@ class NewsInteractor: NewsInteractorType {
         return result[0]
     }
     
+    /// get the number of pages loaded
     func getCurrentPage() -> Int {
         let config = self.getConfig()
         return config.currentPage
     }
     
+    /// get a local ArticleModel by newsId
     func getArticleModel( newsId: String ) -> ArticleModel? {
         let realm = self.realmService.getRealm()
         let model = realm.object(ofType: ArticleModel.self, forPrimaryKey: newsId)
@@ -62,6 +65,7 @@ class NewsInteractor: NewsInteractorType {
         return model
     }
     
+    /// change Article Model property value, the purpose is to test realm notification.
     func updateArticleContent( model: ArticleModel, newContent: String  ) {
         let realm = self.realmService.getRealm()
         try! realm.write {
@@ -69,9 +73,10 @@ class NewsInteractor: NewsInteractorType {
         }
     }
     
+    /// load next page
     func fetchNextNewsHeadlines() -> Observable<[ArticleModel] > {
         let config = self.getConfig()
-        return self.apiClient.fetchHeadlines(page: config.currentPage + 1)
+        return self.apiService.fetchHeadlines(page: config.currentPage + 1)
             .retryPowInterval(maxRetry: 3, multiple: 2.0) // 第一次隔 2秒，第二次隔 4 秒，第三次隔 8秒
             .debug()
             .map([ArticleModel].self, atKeyPath: "articles")
@@ -84,16 +89,16 @@ class NewsInteractor: NewsInteractorType {
             })
     }
     
+    /// clear all local ArticleModel data, and refetch page 1 data from server
     func reloadNewsHeadlines() -> Observable<[ArticleModel] > {
-        
+
         let realm = self.realmService.getRealm()
         let config = self.getConfig()
-        
         try! realm.write {
             config.currentPage = 1
         }
                 
-        return self.apiClient.fetchHeadlines(page: config.currentPage)
+        return self.apiService.fetchHeadlines(page: config.currentPage)
             .retryPowInterval(maxRetry: 3, multiple: 2.0) // 第一次隔 2秒，第二次隔 4 秒，第三次隔 8秒
             .debug()
             .map([ArticleModel].self, atKeyPath: "articles")
@@ -108,6 +113,7 @@ class NewsInteractor: NewsInteractorType {
             })
     }
     
+    /// subscribe ArticleModel changes event
     func observeArticles() -> Observable<(AnyRealmCollection<ArticleModel>, RealmChangeset?)> {
         let result = self.realmService.getRealm().objects(ArticleModel.self)
         return Observable.changeset(from: result)

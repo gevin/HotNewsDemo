@@ -18,14 +18,14 @@ class HeadlinesCoordinator: CoordinatorType {
     var childCoordinators: [CoordinatorType] = []
     private var _navigationController: UINavigationController?
     
-    let apiClient: APIClient
+    let apiService: APIService
     let realmService: RealmService
     
     var disposeBag = DisposeBag()
     
-    init( navigationController: UINavigationController?, apiClient: APIClient, realmService: RealmService ) {
+    init( navigationController: UINavigationController?, apiService: APIService, realmService: RealmService ) {
         self._navigationController = navigationController
-        self.apiClient = apiClient
+        self.apiService = apiService
         self.realmService = realmService
     }
     
@@ -34,8 +34,8 @@ class HeadlinesCoordinator: CoordinatorType {
         guard let vc = storyboard.instantiateViewController(withIdentifier: "HeadlinesViewController") as? HeadlinesViewController else {
             fatalError("HeadlinesViewController does not exist in storyboard.")
         }
-        let imageInteractor = ImageInteractor(apiClient: apiClient, realmService: realmService)
-        let newsInterctor = NewsInteractor(apiClient: apiClient, realmService: realmService)
+        let imageInteractor = ImageInteractor(apiService: apiService, realmService: realmService)
+        let newsInterctor = NewsInteractor(apiService: apiService, realmService: realmService)
         let viewModel = HeadlinesViewModel(coordinator: self, newsInteractor: newsInterctor, imageInteractor: imageInteractor)
         vc.viewModel = viewModel
         self.viewController = vc
@@ -47,7 +47,7 @@ class HeadlinesCoordinator: CoordinatorType {
     }
     
     func gotoNewsDetail( newsId: String ) {
-        let nextCoordinator = NewsDetailCoordinator(navigationController: self._navigationController, apiClient: apiClient, realmService: realmService, newsId: newsId)
+        let nextCoordinator = NewsDetailCoordinator(navigationController: self._navigationController, apiService: apiService, realmService: realmService, newsId: newsId)
         self.childCoordinators.append(nextCoordinator)
         nextCoordinator.start()
         nextCoordinator.didFinish.subscribe(onNext: { (coordinatorOrNil:CoordinatorType?) in

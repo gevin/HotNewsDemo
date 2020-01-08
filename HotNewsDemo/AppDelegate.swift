@@ -29,8 +29,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window = UIWindow(frame: UIScreen.main.bounds)
         window?.backgroundColor = UIColor.white
         let navController = UINavigationController()
-        let apiClient = APIClient()
-        let rootCoordinator = RootCoordinator( window: window!, navigationController: navController, apiClient: apiClient, realmService: RealmService.shared )
+        let apiService = APIService()
+        let rootCoordinator = RootCoordinator( window: window!, navigationController: navController, apiService: apiService, realmService: RealmService.shared )
         rootCoordinator.start()   
         
         return true

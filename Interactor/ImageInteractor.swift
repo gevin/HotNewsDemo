@@ -28,14 +28,14 @@ protocol ImageInteractorType: InteractorType {
 
 class ImageInteractor: ImageInteractorType {
     
-    var apiClient: APIClient
+    var apiService: APIService
     
     var realmService: RealmService
     
     var downloadTaskDict:[String:Observable<ImageState>] = [:]
     
-    init( apiClient: APIClient, realmService: RealmService) {
-        self.apiClient = apiClient
+    init( apiService: APIService, realmService: RealmService) {
+        self.apiService = apiService
         self.realmService = realmService
     }
     

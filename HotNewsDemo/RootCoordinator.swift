@@ -19,14 +19,14 @@ class RootCoordinator: NSObject, CoordinatorType, UINavigationControllerDelegate
     private var _navigationController: UINavigationController?
     private var _window: UIWindow
     
-    let apiClient: APIClient
+    let apiService: APIService
     let realmService: RealmService
     var disposeBag = DisposeBag()
     
-    required init(window: UIWindow, navigationController: UINavigationController?, apiClient: APIClient, realmService: RealmService ) {
+    required init(window: UIWindow, navigationController: UINavigationController?, apiService: APIService, realmService: RealmService ) {
         self._window = window
         self._navigationController = navigationController
-        self.apiClient = apiClient
+        self.apiService = apiService
         self.realmService = realmService
     }
     
@@ -41,7 +41,7 @@ class RootCoordinator: NSObject, CoordinatorType, UINavigationControllerDelegate
     }
     
     func gotoHeadlines() {
-        let coordinator = HeadlinesCoordinator(navigationController: self._navigationController, apiClient: apiClient, realmService: realmService)
+        let coordinator = HeadlinesCoordinator(navigationController: self._navigationController, apiService: apiService, realmService: realmService)
         coordinator.start()
     }
     

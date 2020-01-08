@@ -28,7 +28,7 @@
 		EE6A5E7F23C3332000D26EC6 /* RealmService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6A5E7E23C3332000D26EC6 /* RealmService.swift */; };
 		EE6FFFA623B480BB007045C2 /* UIViewController+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6FFFA523B480BB007045C2 /* UIViewController+Rx.swift */; };
 		EE6FFFA823B48FE4007045C2 /* HeadlinesCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6FFFA723B48FE4007045C2 /* HeadlinesCoordinator.swift */; };
-		EE71784B23B1D0030078ADBC /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE71784A23B1D0030078ADBC /* APIClient.swift */; };
+		EE71784B23B1D0030078ADBC /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE71784A23B1D0030078ADBC /* APIService.swift */; };
 		EE71784D23B1D0DA0078ADBC /* HeadlinesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE71784C23B1D0DA0078ADBC /* HeadlinesViewModel.swift */; };
 		EEBD0A2123B1BFE6004D054C /* Coordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEBD0A2023B1BFE6004D054C /* Coordinator.swift */; };
 		EEBD0A2323B1C153004D054C /* RootCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEBD0A2223B1C153004D054C /* RootCoordinator.swift */; };
@@ -66,7 +66,7 @@
 		EE6A5E7E23C3332000D26EC6 /* RealmService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmService.swift; sourceTree = "<group>"; };
 		EE6FFFA523B480BB007045C2 /* UIViewController+Rx.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+Rx.swift"; sourceTree = "<group>"; };
 		EE6FFFA723B48FE4007045C2 /* HeadlinesCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadlinesCoordinator.swift; sourceTree = "<group>"; };
-		EE71784A23B1D0030078ADBC /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		EE71784A23B1D0030078ADBC /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
 		EE71784C23B1D0DA0078ADBC /* HeadlinesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadlinesViewModel.swift; sourceTree = "<group>"; };
 		EEBD0A2023B1BFE6004D054C /* Coordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Coordinator.swift; sourceTree = "<group>"; };
 		EEBD0A2223B1C153004D054C /* RootCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootCoordinator.swift; sourceTree = "<group>"; };
@@ -192,11 +192,11 @@
 				EEBD0A2023B1BFE6004D054C /* Coordinator.swift */,
 				EE53222223B1AE4F00E92531 /* ActivityIndicator.swift */,
 				EE53222423B1AE6200E92531 /* ErrorTracker.swift */,
-				EE71784A23B1D0030078ADBC /* APIClient.swift */,
 				EE40726123B32F9900DD6C14 /* RLMResultsExtension.swift */,
 				EE30E5ED23B3A32900B99C3A /* StringExtension.swift */,
 				EE6FFFA523B480BB007045C2 /* UIViewController+Rx.swift */,
 				EE6A5E7823C327E500D26EC6 /* MyDataSource.swift */,
+				EE71784A23B1D0030078ADBC /* APIService.swift */,
 				EE6A5E7E23C3332000D26EC6 /* RealmService.swift */,
 			);
 			path = Base;
@@ -363,7 +363,7 @@
 				EEBE820823B1CD8F00A4517E /* NewsInteractor.swift in Sources */,
 				EE71784D23B1D0DA0078ADBC /* HeadlinesViewModel.swift in Sources */,
 				EE53222523B1AE6300E92531 /* ErrorTracker.swift in Sources */,
-				EE71784B23B1D0030078ADBC /* APIClient.swift in Sources */,
+				EE71784B23B1D0030078ADBC /* APIService.swift in Sources */,
 				EE40726223B32F9900DD6C14 /* RLMResultsExtension.swift in Sources */,
 				EE4CC46423AB7531003E1F11 /* AppDelegate.swift in Sources */,
 				EE53222323B1AE4F00E92531 /* ActivityIndicator.swift in Sources */,

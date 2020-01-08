@@ -18,7 +18,7 @@ class NewsDetailCoordinator: NSObject, CoordinatorType {
     var childCoordinators: [CoordinatorType] = []
     private var _navigationController: UINavigationController?
 
-    let apiClient: APIClient
+    let apiService: APIService
     let realmService: RealmService
     let newsId: String
     
@@ -29,9 +29,9 @@ class NewsDetailCoordinator: NSObject, CoordinatorType {
         print("NewsDetailCoordinator dealloc")
     }
     
-    init( navigationController: UINavigationController?, apiClient: APIClient, realmService: RealmService, newsId: String ) {
+    init( navigationController: UINavigationController?, apiService: APIService, realmService: RealmService, newsId: String ) {
         self._navigationController = navigationController
-        self.apiClient = apiClient
+        self.apiService = apiService
         self.realmService = realmService
         self.newsId = newsId
     }
@@ -42,8 +42,8 @@ class NewsDetailCoordinator: NSObject, CoordinatorType {
             print("")
             return
         }
-        let imageInteractor = ImageInteractor(apiClient: apiClient, realmService: realmService)
-        let newsInterctor = NewsInteractor(apiClient: apiClient, realmService: realmService)
+        let imageInteractor = ImageInteractor(apiService: apiService, realmService: realmService)
+        let newsInterctor = NewsInteractor(apiService: apiService, realmService: realmService)
         let viewModel = NewsDetailViewModel(coordinator: self, newsInteractor: newsInterctor, imageInteractor: imageInteractor, newsId: newsId)
         vc.viewModel = viewModel
         self.viewController = vc
