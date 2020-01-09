@@ -12,18 +12,22 @@ import RxCocoa
 import Realm
 import RealmSwift
 
-class HeadlinesCoordinator: CoordinatorType {
+protocol HeadlinesCoordinatorType: CoordinatorType {
+    func gotoNewsDetail( newsId: String )
+}
+
+class HeadlinesCoordinator: NSObject, HeadlinesCoordinatorType {
 
     weak var viewController: UIViewController?
     var childCoordinators: [CoordinatorType] = []
     private var _navigationController: UINavigationController?
     
-    let apiService: APIService
+    let apiService: APIServiceType
     let realmService: RealmService
     
     var disposeBag = DisposeBag()
     
-    init( navigationController: UINavigationController?, apiService: APIService, realmService: RealmService ) {
+    init( navigationController: UINavigationController?, apiService: APIServiceType, realmService: RealmService ) {
         self._navigationController = navigationController
         self.apiService = apiService
         self.realmService = realmService

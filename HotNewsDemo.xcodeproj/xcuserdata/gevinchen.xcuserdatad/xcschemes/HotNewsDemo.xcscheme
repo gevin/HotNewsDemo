@@ -27,6 +27,16 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "EEF4A70323C59D4500B903A7"
+               BuildableName = "HotNewsDemoTests.xctest"
+               BlueprintName = "HotNewsDemoTests"
+               ReferencedContainer = "container:HotNewsDemo.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
@@ -56,6 +66,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "EE4CC45F23AB7531003E1F11"
+            BuildableName = "HotNewsDemo.app"
+            BlueprintName = "HotNewsDemo"
+            ReferencedContainer = "container:HotNewsDemo.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

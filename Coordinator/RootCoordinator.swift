@@ -12,14 +12,18 @@ import RxCocoa
 import Realm
 import RealmSwift
 
-class RootCoordinator: NSObject, CoordinatorType, UINavigationControllerDelegate {
+protocol RootCoordinatorType: CoordinatorType {
+    func gotoHeadlines()
+}
+
+class RootCoordinator: NSObject, RootCoordinatorType, UINavigationControllerDelegate {
     
     weak var viewController: UIViewController?
     var childCoordinators: [CoordinatorType] = []
     private var _navigationController: UINavigationController?
     private var _window: UIWindow
     
-    let apiService: APIService
+    let apiService: APIServiceType
     let realmService: RealmService
     var disposeBag = DisposeBag()
     

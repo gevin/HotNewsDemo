@@ -24,13 +24,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         })
         
-        RealmService.initial(config: realmConfig)
+        let realmService = RealmService(config: realmConfig, name: "news")
+        let apiService = APIService()
         
         window = UIWindow(frame: UIScreen.main.bounds)
         window?.backgroundColor = UIColor.white
         let navController = UINavigationController()
-        let apiService = APIService()
-        let rootCoordinator = RootCoordinator( window: window!, navigationController: navController, apiService: apiService, realmService: RealmService.shared )
+        let rootCoordinator = RootCoordinator( window: window!, navigationController: navController, apiService: apiService, realmService: realmService )
         rootCoordinator.start()   
         
         return true

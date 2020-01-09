@@ -10,5 +10,5 @@ import Realm
 import RealmSwift
 
 class NewsInteractorConfig: Object {
-    @objc dynamic var currentPage: Int = 0
+    @objc dynamic var loadedPage: Int = 0
 }

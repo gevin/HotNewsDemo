@@ -8,7 +8,6 @@
 
 import RxSwift
 import RxCocoa
-import RxRealm
 import RealmSwift
 import Realm
 import SDWebImage
@@ -22,13 +21,14 @@ protocol HeadlinesViewModelType: ViewModelType {
     
     // output
     var articleList: Driver<[ArticleListViewModel]> {get}
+    var loadedPages: Int {get}
     var loading: Driver<Bool> {get}
     var error: Driver<Error> {get}
 }
 
 class HeadlinesViewModel: HeadlinesViewModelType {
 
-    let coordinator: HeadlinesCoordinator
+    let coordinator: HeadlinesCoordinatorType
     let newsInteractor: NewsInteractorType
     let imageInteractor: ImageInteractorType
     private var _loadingTrack   = ActivityIndicator()
@@ -41,7 +41,7 @@ class HeadlinesViewModel: HeadlinesViewModelType {
         
     }
     
-    init( coordinator: HeadlinesCoordinator, newsInteractor: NewsInteractorType, imageInteractor: ImageInteractorType) {
+    init( coordinator: HeadlinesCoordinatorType, newsInteractor: NewsInteractorType, imageInteractor: ImageInteractorType) {
         self.coordinator   = coordinator
         self.newsInteractor = newsInteractor
         self.imageInteractor = imageInteractor
@@ -51,24 +51,23 @@ class HeadlinesViewModel: HeadlinesViewModelType {
     func initial() {
         // observe changes of Article 
         self.newsInteractor.observeArticles()
-            .subscribe(onNext: {[weak self] (results:AnyRealmCollection<ArticleModel>, changesOrNil:RealmChangeset?) in
+            .subscribe(onNext: {[weak self] (change) in
                 guard let strongSelf = self else {return}
-                if let changes = changesOrNil {
-//                    print("result: \(results)")
-//                    print("deleted: \(changes.deleted)")
-//                    print("inserted: \(changes.inserted)")
-//                    print("updated: \(changes.updated)")
-                    strongSelf.updateModels( results.toArray() )
-                } else {
-                    // initial state
-                    if results.count == 0 {
+                switch change {
+                case .initial(let collection):
+                    if collection.count == 0 {
                         strongSelf.loadNextPage()
                     } else {
-                        strongSelf.updateModels( results.toArray() )
+                        strongSelf.updateModels( collection.toArray() )
                     }
+                case .update(let collection, let deletions, let insertions, let modifications):
+                    strongSelf.updateModels( collection.toArray() )
+                case .error(let error):
+                    strongSelf._errorTrack.raiseError(error)
                 }
             })
             .disposed(by: disposeBag)
+//        self.loadNextPage()
     }
     
     private func updateModels(_ models:[ArticleModel] ) {
@@ -130,6 +129,11 @@ extension HeadlinesViewModel {
             .trackError(self._errorTrack)
             .subscribe(onNext: {[weak self] (results:[ArticleModel]) in
                 guard let strongSelf = self else {return}
+                // if results is empty collection, then realm notification will not trigger
+                // but I still have to notify UI update, so I update array manaully
+                if results.count == 0 {
+                    strongSelf.updateModels(results)
+                }
             })
             .disposed(by: disposeBag)
     }
@@ -142,6 +146,11 @@ extension HeadlinesViewModel {
             .trackError(self._errorTrack)
             .subscribe(onNext: {[weak self] (results:[ArticleModel]) in
                 guard let strongSelf = self else {return}
+                // if results is empty collection, then realm notification will not trigger
+                // but I still have to notify UI update, so I update array manaully
+                if results.count == 0 {
+                    strongSelf.updateModels(results)
+                }
             })
             .disposed(by: disposeBag)
     }
@@ -154,5 +163,6 @@ extension HeadlinesViewModel {
     var articleList: Driver<[ArticleListViewModel]> { return _articleVMs.asDriver() }
     var loading: Driver<Bool> { return self._loadingTrack.asDriver() }
     var error: Driver<Error> { return self._errorTrack.asDriver()}
+    var loadedPages: Int { return self.newsInteractor.loadedPages() }
     
 }

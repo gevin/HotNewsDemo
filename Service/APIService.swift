@@ -11,6 +11,7 @@ import RxSwift
 import RxCocoa
 import Moya
 import Alamofire
+import SDWebImage
 
 enum NewsAPI {
     case topHeadlines( page: Int, pageSize: Int, country: String ) // get https://newsapi.org/v2/top-headlines?country=us&apiKey=aadfc8775efa4815b8480bb830f583c9
@@ -82,25 +83,53 @@ extension NewsAPI: Moya.TargetType, AccessTokenAuthorizable {
     
 }
 
-class APIService: NSObject {
+protocol APIServiceType {
+    func fetchHeadlines(page: Int) -> Observable<[ArticleModel]>
+    func downloadImage(url: URL) -> Observable<ImageState>
+}
+
+class APIService: APIServiceType {
+    
+    public static var shared: APIService! 
     
     var providerHolder:[MoyaProvider<NewsAPI>] = []
     var provider = MoyaProvider<NewsAPI>()
     private var _token = "aadfc8775efa4815b8480bb830f583c9"
     var queue = DispatchQueue.global(qos: .background)
     
-    override init() {
-        super.init()
+    init() {
         let authPlugin = AccessTokenPlugin(tokenClosure: self._token)
         self.provider = MoyaProvider<NewsAPI>(plugins: [authPlugin])
         self.provider.manager.session.configuration.timeoutIntervalForRequest = 20
     }
     
-func fetchHeadlines(page: Int) -> Observable<Response> {
-    let apiRequest = provider.rx.request(.topHeadlines(page: page, pageSize: 10, country: "us"), callbackQueue: queue)
+    func fetchHeadlines(page: Int) -> Observable<[ArticleModel]> {
+        let apiRequest = provider.rx.request(.topHeadlines(page: page, pageSize: 10, country: "us"), callbackQueue: queue)
             .asObservable()
-            
+            .map([ArticleModel].self, atKeyPath: "articles")
+        
         return apiRequest
+    }
+    
+    func downloadImage(url: URL) -> Observable<ImageState> {
+        
+        let downloadImageTask = Observable<ImageState>.create({ (observer) -> Disposable in
+            observer.onNext(ImageState.loading)  
+            //SDWebImageDownloader.shared.setValue("", forHTTPHeaderField: "ETag")
+            
+            SDWebImageDownloader.shared.downloadImage(with: url, completed: {[weak self] (imageOrNil:UIImage?, dataOrNil:Data?, errorOrNil:Error?, finish:Bool)  in    
+                if let error = errorOrNil {
+                    observer.onNext(ImageState.error(error))
+                    observer.onCompleted()
+                    return
+                }
+                observer.onNext(ImageState.completed(imageOrNil))
+                observer.onCompleted()
+            })
+            
+            return Disposables.create()
+        })
+        return downloadImageTask
     }
 
 }

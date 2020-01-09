@@ -9,7 +9,6 @@ target 'HotNewsDemo' do
   pod 'RxSwift', '~> 4.0'
   pod 'RxCocoa', '~> 4.0'
   pod 'RxDataSources', '~> 3.0'
-  pod "RxRealm"
   
   pod 'RealmSwift'
   
@@ -17,5 +16,8 @@ target 'HotNewsDemo' do
   pod 'SDWebImage'
   pod 'SVProgressHUD'
 	
+  target 'HotNewsDemoTests' do
+      inherit! :search_paths
+  end
 
 end

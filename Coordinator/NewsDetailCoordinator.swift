@@ -12,13 +12,17 @@ import RxCocoa
 import Realm
 import RealmSwift
 
-class NewsDetailCoordinator: NSObject, CoordinatorType {
+protocol NewsDetailCoordinatorType: CoordinatorType {
+    
+} 
+
+class NewsDetailCoordinator: NSObject, NewsDetailCoordinatorType {
     
     weak var viewController: UIViewController?
     var childCoordinators: [CoordinatorType] = []
     private var _navigationController: UINavigationController?
 
-    let apiService: APIService
+    let apiService: APIServiceType
     let realmService: RealmService
     let newsId: String
     
@@ -29,7 +33,7 @@ class NewsDetailCoordinator: NSObject, CoordinatorType {
         print("NewsDetailCoordinator dealloc")
     }
     
-    init( navigationController: UINavigationController?, apiService: APIService, realmService: RealmService, newsId: String ) {
+    init( navigationController: UINavigationController?, apiService: APIServiceType, realmService: RealmService, newsId: String ) {
         self._navigationController = navigationController
         self.apiService = apiService
         self.realmService = realmService

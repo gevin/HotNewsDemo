@@ -37,8 +37,3 @@ protocol ViewType {
     associatedtype ViewModelType
     var viewModel: ViewModelType? { get }
 }
-
-protocol InteractorType {
-    var apiService: APIService { get }
-    var realmService: RealmService { get }
-}

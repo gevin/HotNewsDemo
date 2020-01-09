@@ -20,7 +20,7 @@ enum ImageState {
     case error(_ error: Error? )
 }
 
-protocol ImageInteractorType: InteractorType {
+protocol ImageInteractorType {
     
     func getImage( urlString: String ) -> Observable<ImageState>
     
@@ -28,13 +28,13 @@ protocol ImageInteractorType: InteractorType {
 
 class ImageInteractor: ImageInteractorType {
     
-    var apiService: APIService
+    var apiService: APIServiceType
     
-    var realmService: RealmService
+    var realmService: RealmServiceType
     
     var downloadTaskDict:[String:Observable<ImageState>] = [:]
     
-    init( apiService: APIService, realmService: RealmService) {
+    init( apiService: APIServiceType, realmService: RealmServiceType) {
         self.apiService = apiService
         self.realmService = realmService
     }
@@ -57,30 +57,18 @@ class ImageInteractor: ImageInteractorType {
             return Observable.of(ImageState.completed(image))
         }
         
-        let downloadImageTask = Observable<ImageState>.create({ (observer) -> Disposable in
-        
-            observer.onNext(ImageState.loading)
-            
-            //SDWebImageDownloader.shared.setValue("", forHTTPHeaderField: "ETag")
-            SDWebImageDownloader.shared.downloadImage(with: url, completed: {[weak self] (imageOrNil:UIImage?, dataOrNil:Data?, errorOrNil:Error?, finish:Bool)  in
-                
-                if let error = errorOrNil {
-                    observer.onNext(ImageState.error(error))
-                    observer.onCompleted()
-                    self?.downloadTaskDict[urlString] = nil
-                    return
+        let downloadImageTask = self.apiService.downloadImage(url: url)
+            .do(onNext: {[weak self] (state:ImageState) in
+                guard let strongSelf = self else {return}
+                if case let ImageState.completed(imageOrNil) = state {
+                    if let image = imageOrNil {
+                        SDImageCache.shared.storeImage(toMemory: image, forKey: urlString)
+                        SDImageCache.shared.storeImageData(toDisk: image.sd_imageData(), forKey: urlString)
+                    }
+                    strongSelf.downloadTaskDict[urlString] = nil
                 }
-                
-                SDImageCache.shared.storeImage(toMemory: imageOrNil, forKey: urlString)
-                SDImageCache.shared.storeImageData(toDisk: imageOrNil?.sd_imageData(), forKey: urlString)
-                observer.onNext(ImageState.completed(imageOrNil))
-                observer.onCompleted()
-                
-                self?.downloadTaskDict[urlString] = nil
             })
-            
-            return Disposables.create()
-        }).share(replay: 1)
+            .share(replay: 1)
         
         downloadTaskDict[urlString] = downloadImageTask
         return downloadImageTask
